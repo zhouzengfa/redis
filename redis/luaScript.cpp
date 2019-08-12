@@ -72,6 +72,47 @@ const char* testLuaRank = \
 			end\
 	return t;";
 
+const char* testGetPhoto = \
+"\
+\
+--[[KEYS[1] start pos\
+--KEYS[2] num\
+--KEYS[3] 照片表名\
+--KEYS[4] 已看过的照片表名\
+--]]\
+\
+local index = tonumber(KEYS[1])\
+local num = tonumber(KEYS[2])\
+local table_name = KEYS[3];\
+local totalNum = redis.call('zcard', table_name)\
+local t = {}\
+local newPosition = index\
+redis.log(redis.LOG_NOTICE, 'test', index, totalNum, table_name);\
+for index = tonumber(KEYS[1]), totalNum, 10 do\
+local photolist = redis.call('zrange', table_name, index, index + 10, 'withscores');\
+redis.log(redis.LOG_NOTICE, #(photolist), 'index', index)\
+for i = 1, #(photolist), 2 do\
+redis.log(redis.LOG_NOTICE, i, ' ', photolist[i], ' ', photolist[i + 1]);\
+if (redis.call('exists', KEYS[4]) == 0 or redis.call('getbit', KEYS[4], tonumber(photolist[i + 1])) == 0)\
+then\
+redis.log(redis.LOG_NOTICE, 'insert', photolist[i + 1], ' ', photolist[i]);\
+local tmp = {}\
+table.insert(tmp, 1, photolist[i])\
+table.insert(tmp, 2, photolist[i + 1])\
+table.insert(t, tmp)\
+if (table.getn(t) >= num)\
+then\
+return{ newPosition, t }\
+end\
+end\
+end\
+newPosition = newPosition + 10\
+end\
+if (newPosition > totalNum)\
+then\
+newPosition = totalNum\
+end\
+return{ newPosition, t }
 
 /*
 const char* testLuaTable = \
@@ -111,12 +152,12 @@ bool LuaScriptMgr::init(redisContext* rc)
 	LOAD_SCRIPT(unRegZone);
 	LOAD_SCRIPT(testLuaTable);
 	LOAD_SCRIPT(testLuaRank);
+	LOAD_SCRIPT(testGetPhoto);
 
 #undef LOAD_SCRIPT
 
 	return true;
 }
-
 
 bool LuaScriptMgr::test(redisContext* rc)
 {
@@ -129,6 +170,7 @@ bool LuaScriptMgr::test(redisContext* rc)
 	testUnRegZone(rc);
 	testTable(rc);
 	testRank(rc);
+	testGetPhotList(rc);
 
 	return true;
 }
@@ -189,6 +231,23 @@ void LuaScriptMgr::testUnRegZone(redisContext* rc)
 	std::cout << "+++++++++++++++" << __FUNCTION__ << " end ++++++++++++++++++"<< endl;
 }
 
+void LuaScriptMgr::testGetPhotList(redisContext* rc)
+{
+	std::cout << "+++++++++++++++" << __FUNCTION__ << " start ++++++++++++++++++" << endl;
+	redisReply* r = (redisReply*)redisCommand(rc, "evalsha %s %u %u", script2Sha["testGetPhoto"].c_str(), 1, 100);
+	if (nullptr == r)
+	{
+		std::cout << __FUNCTION__ << " test error." << endl;
+		return;
+	}
+
+	cout << r->type << endl;
+	//cout << r->str << endl;
+	//cout << r->integer << endl;
+
+	freeReplyObject(r);
+	std::cout << "+++++++++++++++" << __FUNCTION__ << " end ++++++++++++++++++" << endl;
+}
 
 void LuaScriptMgr::testTable(redisContext* rc)
 {

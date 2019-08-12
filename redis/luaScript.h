@@ -19,6 +19,7 @@ private:
 	void testUnRegZone(redisContext* rc);
 	void testTable(redisContext* rc);
 	void testRank(redisContext* rc);
+	void testGetPhotList(redisContext* rc);
 
 private:
 	LuaScriptMgr();
