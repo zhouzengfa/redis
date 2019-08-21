@@ -89,28 +89,28 @@ local t = {}\
 local newPosition = index\
 redis.log(redis.LOG_NOTICE, 'test', index, totalNum, table_name);\
 for index = tonumber(KEYS[1]), totalNum, 10 do\
-local photolist = redis.call('zrange', table_name, index, index + 10, 'withscores');\
-redis.log(redis.LOG_NOTICE, #(photolist), 'index', index)\
-for i = 1, #(photolist), 2 do\
-redis.log(redis.LOG_NOTICE, i, ' ', photolist[i], ' ', photolist[i + 1]);\
-if (redis.call('exists', KEYS[4]) == 0 or redis.call('getbit', KEYS[4], tonumber(photolist[i + 1])) == 0)\
-then\
-redis.log(redis.LOG_NOTICE, 'insert', photolist[i + 1], ' ', photolist[i]);\
-local tmp = {}\
-table.insert(tmp, 1, photolist[i])\
-table.insert(tmp, 2, photolist[i + 1])\
-table.insert(t, tmp)\
-if (table.getn(t) >= num)\
-then\
-return{ newPosition, t }\
-end\
-end\
-end\
-newPosition = newPosition + 10\
+	local photolist = redis.call('zrange', table_name, index, index + 10, 'withscores');\
+	redis.log(redis.LOG_NOTICE, #(photolist), 'index', index)\
+	for i = 1, #(photolist), 2 do\
+		redis.log(redis.LOG_NOTICE, i, ' ', photolist[i], ' ', photolist[i + 1]);\
+		if (redis.call('exists', KEYS[4]) == 0 or redis.call('getbit', KEYS[4], tonumber(photolist[i + 1])) == 0)\
+		then\
+			redis.log(redis.LOG_NOTICE, 'insert', photolist[i + 1], ' ', photolist[i]);\
+			local tmp = {}\
+			table.insert(tmp, 1, photolist[i])\
+			table.insert(tmp, 2, photolist[i + 1])\
+			table.insert(t, tmp)\
+			if (table.getn(t) >= num)\
+			then\
+				return{ newPosition, t }\
+			end\
+		end\
+	end\
+	newPosition = newPosition + 10\
 end\
 if (newPosition > totalNum)\
 then\
-newPosition = totalNum\
+	newPosition = totalNum\
 end\
 return{ newPosition, t }
 
@@ -234,7 +234,7 @@ void LuaScriptMgr::testUnRegZone(redisContext* rc)
 void LuaScriptMgr::testGetPhotList(redisContext* rc)
 {
 	std::cout << "+++++++++++++++" << __FUNCTION__ << " start ++++++++++++++++++" << endl;
-	redisReply* r = (redisReply*)redisCommand(rc, "evalsha %s %u %u", script2Sha["testGetPhoto"].c_str(), 1, 100);
+	redisReply* r = (redisReply*)redisCommand(rc, "evalsha %s %u %u", script2Sha["testGetPhoto"].c_str(), 1, 100, "photo", "testbit");
 	if (nullptr == r)
 	{
 		std::cout << __FUNCTION__ << " test error." << endl;
@@ -242,6 +242,13 @@ void LuaScriptMgr::testGetPhotList(redisContext* rc)
 	}
 
 	cout << r->type << endl;
+	cout << "elements:" << r->elements;
+	cout << "index:" << r->element[0].integer;
+	for (int i = 0; i < r->elements; ++i)
+	{
+		auto ele = r->element[i];
+		count << " ele type:" << ele->type;
+	}
 	//cout << r->str << endl;
 	//cout << r->integer << endl;
 
