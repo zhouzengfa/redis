@@ -2,7 +2,11 @@
 TARGET=test
 #LIB=-lhiredis
 LIB= ../hiredis/libhiredis.a
+LIB += ../jsoncpp/libjsoncpp.a
+
 INCLUDE= -I ../hiredis/
+INCLUDE += -I ../jsoncpp/json/
+
 #LIB_DIR= -L ../hiredis/
 SRCFILE=$(wildcard *.cpp)
 

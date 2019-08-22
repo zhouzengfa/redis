@@ -15,7 +15,7 @@ int main()
 	}
 	
 	cout << "Connect to redisServer Success" << endl;
-	redisReply* r = (redisReply*)redisCommand(c, "select 1");
+	redisReply* r = (redisReply*)redisCommand(c, "select 0");
 	cout << r->type << endl;
 	cout << r->str << endl;
 	freeReplyObject(r);

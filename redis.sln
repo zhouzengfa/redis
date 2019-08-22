@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "redis", "redis\redis.vcxproj", "{239A828F-EE97-468A-8D3D-21E2B1C2A83F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jsoncpp", "jsoncpp\jsoncpp.vcxproj", "{CD781D5C-1AF6-43DF-9EB4-DBF679FAD19F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -15,6 +17,10 @@ Global
 		{239A828F-EE97-468A-8D3D-21E2B1C2A83F}.Debug|Win32.Build.0 = Debug|Win32
 		{239A828F-EE97-468A-8D3D-21E2B1C2A83F}.Release|Win32.ActiveCfg = Release|Win32
 		{239A828F-EE97-468A-8D3D-21E2B1C2A83F}.Release|Win32.Build.0 = Release|Win32
+		{CD781D5C-1AF6-43DF-9EB4-DBF679FAD19F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CD781D5C-1AF6-43DF-9EB4-DBF679FAD19F}.Debug|Win32.Build.0 = Debug|Win32
+		{CD781D5C-1AF6-43DF-9EB4-DBF679FAD19F}.Release|Win32.ActiveCfg = Release|Win32
+		{CD781D5C-1AF6-43DF-9EB4-DBF679FAD19F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,7 +1,10 @@
 
 #include "luaScript.h"
 #include "../hiredis/hiredis.h"
+#include "json.h"
 #include <iostream>
+#include <memory>
+#include <cstring>
 
 //int main()
 //{
@@ -71,7 +74,7 @@ const char* testLuaRank = \
 				table.insert(t,tmp)\
 			end\
 	return t;";
-
+#if _NOT_USE_JSON
 const char* testGetPhoto = \
 "\
 \
@@ -81,38 +84,89 @@ const char* testGetPhoto = \
 --KEYS[4] 已看过的照片表名\
 --]]\
 \
-local index = tonumber(KEYS[1])\
-local num = tonumber(KEYS[2])\
-local table_name = KEYS[3];\
-local totalNum = redis.call('zcard', table_name)\
-local t = {}\
-local newPosition = index\
-redis.log(redis.LOG_NOTICE, 'test', index, totalNum, table_name);\
-for index = tonumber(KEYS[1]), totalNum, 10 do\
-	local photolist = redis.call('zrange', table_name, index, index + 10, 'withscores');\
-	redis.log(redis.LOG_NOTICE, #(photolist), 'index', index)\
-	for i = 1, #(photolist), 2 do\
-		redis.log(redis.LOG_NOTICE, i, ' ', photolist[i], ' ', photolist[i + 1]);\
-		if (redis.call('exists', KEYS[4]) == 0 or redis.call('getbit', KEYS[4], tonumber(photolist[i + 1])) == 0)\
-		then\
-			redis.log(redis.LOG_NOTICE, 'insert', photolist[i + 1], ' ', photolist[i]);\
-			local tmp = {}\
-			table.insert(tmp, 1, photolist[i])\
-			table.insert(tmp, 2, photolist[i + 1])\
-			table.insert(t, tmp)\
-			if (table.getn(t) >= num)\
-			then\
-				return{ newPosition, t }\
-			end\
-		end\
-	end\
-	newPosition = newPosition + 10\
-end\
-if (newPosition > totalNum)\
-then\
-	newPosition = totalNum\
-end\
-return{ newPosition, t }
+local index = tonumber(KEYS[1]) \
+local num = tonumber(KEYS[2]) \
+local table_name = KEYS[3]; \
+local totalNum = redis.call('zcard', table_name) \
+local t = {} \
+local newPosition = index \
+redis.log(redis.LOG_NOTICE, 'test', index, totalNum, table_name); \
+for index = tonumber(KEYS[1]), totalNum, 10 do \
+	local photolist = redis.call('zrange', table_name, index, index + 10, 'withscores'); \
+	redis.log(redis.LOG_NOTICE, #(photolist), 'index', index) \
+	for i = 1, #(photolist), 2 do \
+		redis.log(redis.LOG_NOTICE, i, ' ', photolist[i], ' ', photolist[i + 1]); \
+		if (redis.call('exists', KEYS[4]) == 0 or redis.call('getbit', KEYS[4], tonumber(photolist[i + 1])) == 0) \
+		then \
+			redis.log(redis.LOG_NOTICE, 'insert', photolist[i + 1], ' ', photolist[i]); \
+			local tmp = {} \
+			table.insert(tmp, 1, photolist[i]) \
+			table.insert(tmp, 2, photolist[i + 1]) \
+			table.insert(t, tmp) \
+			if (table.getn(t) >= num) \
+			then \
+				return{ newPosition, t } \
+			end \
+		end \
+	end \
+	newPosition = newPosition + 10 \
+end \
+if (newPosition > totalNum) \
+then \
+	newPosition = totalNum \
+end \
+return{ newPosition, t }";
+#else
+const char* testGetPhoto = \
+"\
+\
+--[[KEYS[1] start pos\
+--KEYS[2] num\
+--KEYS[3] 照片表名\
+--KEYS[4] 已看过的照片表名\
+--]]\
+\
+local index = tonumber(KEYS[1]) \
+local num = tonumber(KEYS[2]) \
+local table_name = KEYS[3]; \
+local totalNum = redis.call('zcard', table_name) \
+local t = {} \
+local newPosition = index \
+redis.log(redis.LOG_NOTICE, 'test', index, totalNum, table_name); \
+for index = tonumber(KEYS[1]), totalNum, 10 do \
+	local photolist = redis.call('zrange', table_name, index, index + 10, 'withscores'); \
+	redis.log(redis.LOG_NOTICE, #(photolist), 'index', index) \
+	for i = 1, #(photolist), 2 do \
+		redis.log(redis.LOG_NOTICE, i, ' ', photolist[i], ' ', photolist[i + 1]); \
+		if (redis.call('exists', KEYS[4]) == 0 or redis.call('getbit', KEYS[4], tonumber(photolist[i + 1])) == 0) \
+		then \
+			redis.log(redis.LOG_NOTICE, 'insert', photolist[i + 1], ' ', photolist[i]); \
+			local tmp = {} \
+			table.insert(tmp, 1, photolist[i]) \
+			table.insert(tmp, 2, photolist[i + 1]) \
+			table.insert(t, tmp) \
+			if (table.getn(t) >= num) \
+			then \
+				local ret={} \
+				ret[\"index\"]=newPosition \
+				ret[\"data\"] = t \
+				return cjson.encode(ret) \
+			end \
+		end \
+	end \
+	newPosition = newPosition + 10 \
+end \
+if (newPosition > totalNum) \
+then \
+	newPosition = totalNum \
+end \
+local ret={} \
+ret[\"index\"]=newPosition \
+ret[\"data\"] = t \
+return cjson.encode(ret) ";
+
+#endif
+
 
 /*
 const char* testLuaTable = \
@@ -231,23 +285,60 @@ void LuaScriptMgr::testUnRegZone(redisContext* rc)
 	std::cout << "+++++++++++++++" << __FUNCTION__ << " end ++++++++++++++++++"<< endl;
 }
 
+#if _NOT_USE_JSON
 void LuaScriptMgr::testGetPhotList(redisContext* rc)
 {
 	std::cout << "+++++++++++++++" << __FUNCTION__ << " start ++++++++++++++++++" << endl;
-	redisReply* r = (redisReply*)redisCommand(rc, "evalsha %s %u %u", script2Sha["testGetPhoto"].c_str(), 1, 100, "photo", "testbit");
+	char photo[] = "photo";
+	char testbit[] = "testbit";
+	redisReply* r = (redisReply*)redisCommand(rc, "evalsha %s %d %d %d %s %s", script2Sha["testGetPhoto"].c_str(), 4, 1, 100, "photo", "testbit");
+	//redisReply* r = (redisReply*)redisCommand(rc, "evalsha 1f579a6c4f04c78fd00dc4ed72361635b824ec05 4 1 100 photo testbit");
 	if (nullptr == r)
 	{
 		std::cout << __FUNCTION__ << " test error." << endl;
 		return;
 	}
 
-	cout << r->type << endl;
-	cout << "elements:" << r->elements;
-	cout << "index:" << r->element[0].integer;
-	for (int i = 0; i < r->elements; ++i)
+	cout << "type:" << r->type << endl;
+	//cout << "str:" << r->str << endl;
+	if (REDIS_REPLY_ERROR == r->type)
 	{
-		auto ele = r->element[i];
-		count << " ele type:" << ele->type;
+		cout << r->str << endl;
+		return;
+	}
+	if (REDIS_REPLY_ARRAY != r->type)
+	{
+		cout << " type isn't array." << r->type;
+		return;
+	}
+
+	if (2 != r->elements)
+	{
+		cout << " ele num != 2 " << r->elements;
+		return;
+	}
+
+	if (REDIS_REPLY_INTEGER != r->element[0]->type)
+	{
+		cout << "ele[0] type isn't int" << r->element[0]->type;
+		return;
+	}
+
+	int index = r->element[0]->integer;
+	cout << "index:" << index << endl;
+	auto & ele1 = r->element[1];
+	if (ele1->type != REDIS_REPLY_ARRAY)
+	{
+		cout << "ele1 is not array." << ele1->type;
+		return;
+	}
+
+	for (int i = 0; i < ele1->elements; )
+	{
+		auto tm1 = ele1->element[i]->str;
+		auto tm2 = ele1->element[i+1]->str;
+		cout << "tmp1:" << tm1 << " tmp2:" << tm2;
+		i += 2;
 	}
 	//cout << r->str << endl;
 	//cout << r->integer << endl;
@@ -255,7 +346,71 @@ void LuaScriptMgr::testGetPhotList(redisContext* rc)
 	freeReplyObject(r);
 	std::cout << "+++++++++++++++" << __FUNCTION__ << " end ++++++++++++++++++" << endl;
 }
+#else
+void LuaScriptMgr::testGetPhotList(redisContext* rc)
+{
+	std::cout << "+++++++++++++++" << __FUNCTION__ << " start ++++++++++++++++++" << endl;
 
+	{
+		redisReply* r = (redisReply*)redisCommand(rc, "setbit testbit 2 1");
+		freeReplyObject(r);
+	}
+	redisReply* r = (redisReply*)redisCommand(rc, "evalsha %s %d %d %d %s %s", script2Sha["testGetPhoto"].c_str(), 4, 1, 100, "photo", "testbit");
+	if (nullptr == r)
+	{
+		std::cout << __FUNCTION__ << " test error." << endl;
+		return;
+	}
+
+	cout << "type:" << r->type << endl;
+	if (REDIS_REPLY_STRING != r->type)
+	{
+		cout << r->str << endl;
+		return;
+	}
+	cout << "str:" << r->str << endl;
+
+	Json::Value root;
+	JSONCPP_STRING errs;
+	Json::CharReaderBuilder readerBuilder;
+	std::unique_ptr<Json::CharReader> const reader(readerBuilder.newCharReader());
+	if (!reader->parse(r->str, r->str + strlen(r->str), &root, &errs) || !errs.empty())
+	{
+		cout << "parse error." << errs << endl;
+		return;
+	}
+
+	if (root["index"].isNull())
+	{
+		cout << "not find index field." << endl;
+		return;
+	}
+
+	cout << "index:" << root["index"].asInt() << endl;
+
+	if (root["data"].isNull())
+	{
+		cout << "not find data field." << endl;
+		return;
+	}
+
+	Json::Value& data = root["data"];
+	if (!data.isArray())
+	{
+		cout << "data is not array." << endl;
+		return;
+	}
+
+	for (auto item : data)
+	{
+		cout << item[0] << "," << item[1] <<endl;
+	}
+	//cout << "index:" << root["data"].
+
+	freeReplyObject(r);
+	std::cout << "+++++++++++++++" << __FUNCTION__ << " end ++++++++++++++++++" << endl;
+}
+#endif
 void LuaScriptMgr::testTable(redisContext* rc)
 {
 	std::cout << "+++++++++++++++" << __FUNCTION__ << "++++++++++++++++++"<< endl;
