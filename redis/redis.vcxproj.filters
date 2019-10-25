@@ -16,6 +16,9 @@
     <Filter Include="源文件\LuaScript">
       <UniqueIdentifier>{675116c6-6c0e-48e0-8dd1-8cda86d25c6b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\test">
+      <UniqueIdentifier>{2429d2cc-224e-4ec6-86d5-da2132e94218}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -50,6 +53,9 @@
     </ClCompile>
     <ClCompile Include="luaScript.cpp">
       <Filter>源文件\LuaScript</Filter>
+    </ClCompile>
+    <ClCompile Include="testRedisCommand.cpp">
+      <Filter>源文件\test</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +94,9 @@
     </ClInclude>
     <ClInclude Include="luaScript.h">
       <Filter>源文件\LuaScript</Filter>
+    </ClInclude>
+    <ClInclude Include="testRedisCommand.h">
+      <Filter>源文件\test</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

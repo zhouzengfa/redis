@@ -1,5 +1,6 @@
 #include "luaScript.h"
 #include "../hiredis/hiredis.h"
+#include "testRedisCommand.h"
 #include <iostream>
 
 using namespace std;
@@ -32,6 +33,9 @@ int main()
 
 	LuaScriptMgr::getInstance().init(c);
 	LuaScriptMgr::getInstance().test(c);
+
+	TestRedisCommand::getInstance().init(c);
+	TestRedisCommand::getInstance().test(c);
 
 	redisFree(c);
 	return 0;

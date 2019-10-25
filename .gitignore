@@ -1,0 +1,16 @@
+# ----[ Visual Studio ]------- #
+*.opensdf
+*.suo
+*.pc
+*.sdf
+
+
+
+# -------------[ make files ]------------------------ #
+*.o
+*.d
+*.a
+*.s
+*.lo
+*.so
+redis/test

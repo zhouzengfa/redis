@@ -75,6 +75,7 @@
     <ClCompile Include="..\hiredis\test.c" />
     <ClCompile Include="luaScript.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="testRedisCommand.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\hiredis\async.h" />
@@ -89,6 +90,7 @@
     <ClInclude Include="..\hiredis\sslio.h" />
     <ClInclude Include="..\hiredis\win32.h" />
     <ClInclude Include="luaScript.h" />
+    <ClInclude Include="testRedisCommand.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\hiredis\test.sh" />
